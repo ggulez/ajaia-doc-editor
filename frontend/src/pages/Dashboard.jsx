@@ -40,6 +40,13 @@ export default function Dashboard({ user }) {
 
   const startRename = (d) => { setRenamingId(d.id); setRenameValue(d.title) }
 
+  const deleteDoc = async (id, e) => {
+    e.stopPropagation()
+    if (!window.confirm('Delete this document?')) return
+    const { deleteDoc: firestoreDelete } = await import('firebase/firestore')
+    await firestoreDelete(doc(db, 'documents', id))
+  }
+
   const saveRename = async (id) => {
     await updateDoc(doc(db, 'documents', id), { title: renameValue })
     setRenamingId(null)
@@ -120,6 +127,7 @@ const styles = {
   ownerBadge: { fontSize:'0.7rem', background:'#dbeafe', color:'#1d4ed8', padding:'0.2rem 0.5rem', borderRadius:'99px' },
   sharedBadge: { fontSize:'0.7rem', background:'#fef3c7', color:'#92400e', padding:'0.2rem 0.5rem', borderRadius:'99px' },
   renameBtn: { fontSize:'0.75rem', background:'transparent', border:'none', color:'#2563eb', cursor:'pointer' },
+  deleteBtn: { fontSize:'0.75rem', background:'transparent', border:'none', color:'#dc2626', cursor:'pointer' },
   renameRow: { display:'flex', gap:'0.5rem', marginBottom:'0.5rem' },
   renameInput: { flex:1, padding:'0.3rem', border:'1px solid #ddd', borderRadius:'4px', fontSize:'0.9rem' },
   saveBtn: { padding:'0.3rem 0.6rem', background:'#2563eb', color:'white', border:'none', borderRadius:'4px', cursor:'pointer', fontSize:'0.8rem' }
