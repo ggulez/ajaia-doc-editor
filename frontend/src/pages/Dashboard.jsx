@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db, auth } from '../firebase'
-import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc, updateDoc } from 'firebase/firestore'
+import { collection, addDoc, onSnapshot, query, where, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { signOut } from 'firebase/auth'
 import { useNavigate } from 'react-router-dom'
 import UploadModal from '../components/UploadModal'
@@ -38,18 +38,20 @@ export default function Dashboard({ user }) {
     navigate('/doc/' + ref.id)
   }
 
-  const startRename = (d) => { setRenamingId(d.id); setRenameValue(d.title) }
-
-  const deleteDoc = async (id, e) => {
-    e.stopPropagation()
-    if (!window.confirm('Delete this document?')) return
-    const { deleteDoc: firestoreDelete } = await import('firebase/firestore')
-    await firestoreDelete(doc(db, 'documents', id))
+  const startRename = (d) => {
+    setRenamingId(d.id)
+    setRenameValue(d.title)
   }
 
   const saveRename = async (id) => {
     await updateDoc(doc(db, 'documents', id), { title: renameValue })
     setRenamingId(null)
+  }
+
+  const handleDelete = async (id, e) => {
+    e.stopPropagation()
+    if (!window.confirm('Delete this document?')) return
+    await deleteDoc(doc(db, 'documents', id))
   }
 
   return (
@@ -73,7 +75,13 @@ export default function Dashboard({ user }) {
             <div key={d.id} style={styles.docCard}>
               {renamingId === d.id ? (
                 <div style={styles.renameRow}>
-                  <input style={styles.renameInput} value={renameValue} onChange={e => setRenameValue(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveRename(d.id)} autoFocus />
+                  <input
+                    style={styles.renameInput}
+                    value={renameValue}
+                    onChange={e => setRenameValue(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && saveRename(d.id)}
+                    autoFocus
+                  />
                   <button style={styles.saveBtn} onClick={() => saveRename(d.id)}>Save</button>
                 </div>
               ) : (
@@ -81,7 +89,10 @@ export default function Dashboard({ user }) {
               )}
               <div style={styles.docMeta}>
                 <span style={styles.ownerBadge}>Owner</span>
-                <button style={styles.renameBtn} onClick={() => startRename(d)}>Rename</button>
+                <div style={{display:'flex', gap:'0.5rem'}}>
+                  <button style={styles.renameBtn} onClick={(e) => { e.stopPropagation(); startRename(d) }}>Rename</button>
+                  <button style={styles.deleteBtn} onClick={(e) => handleDelete(d.id, e)}>Delete</button>
+                </div>
               </div>
             </div>
           ))}
